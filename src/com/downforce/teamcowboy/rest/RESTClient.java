@@ -41,17 +41,24 @@ public class RESTClient {
     private final Gson _gson;
 
     /**
-     * 
      * @param publicApiKey your Team Cowboy public API key
      * @param privateApiKey your Team Cowboy private API key
      * @throws NoSuchAlgorithmException if SHA-1 is not supported by the runtime
      */
     public RESTClient(String publicApiKey, String privateApiKey) throws NoSuchAlgorithmException {
-    	this(publicApiKey, privateApiKey, new HttpProviderImpl());
+        this(publicApiKey, privateApiKey, new HttpProviderImpl());
     }
     
+    /**
+     * Constructor that allows for a test HTTP provider implementation.
+     * 
+     * @param publicApiKey your Team Cowboy public API key
+     * @param privateApiKey your Team Cowboy private API key
+     * @param httpProvider the IHttpProvider for the client to use
+     * @throws NoSuchAlgorithmException if SHA-1 is not supported by the runtime
+     */
     public RESTClient(String publicApiKey, String privateApiKey, IHttpProvider httpProvider) throws NoSuchAlgorithmException {
-    	_publicApiKey = publicApiKey;
+        _publicApiKey = publicApiKey;
         _privateApiKey = privateApiKey;
         sha1 = MessageDigest.getInstance("SHA-1");
         _httpProvider = httpProvider;
@@ -350,11 +357,11 @@ public class RESTClient {
     }
 
     public APIResponse<String> Test_GetRequest(String testParam) throws IOException {
-    	return Test_Request(testParam, HttpVerb.GET);
+        return Test_Request(testParam, HttpVerb.GET);
     }
 
     public APIResponse<String> Test_PostRequest(String testParam) throws IOException {
-    	return Test_Request(testParam, HttpVerb.POST);
+        return Test_Request(testParam, HttpVerb.POST);
     }
 
     private APIResponse<String> Test_Request(String testParam, HttpVerb verb) throws IOException {
@@ -445,6 +452,16 @@ public class RESTClient {
         return call("User_GetTeams", HttpVerb.GET, false, params, Team[].class);
     }
 
+    /**
+     * Private helper method to in
+     * 
+     * @param method the method to call
+     * @param httpVerb the HTTP verb to use in the request
+     * @param secure whether the request should be done over HTTPS
+     * @param params the list of parameters to the method
+     * @param clazz the expected return type for the request 
+     * @return the wrapped response to the request
+     */
     private <T> APIResponse<T> call(String method, HttpVerb httpVerb, boolean secure, TreeMap<String, String> params, Class<T> clazz) throws IOException {
         String response = invoke(method, httpVerb, secure, params);
         
@@ -453,54 +470,58 @@ public class RESTClient {
         boolean success = result.get("success").getAsBoolean();
         Number requestSecs = result.get("requestSecs").getAsNumber();
         
-        if (success) {
-        	synchronized (_gson) {
-	        	return new APIResponse<T>(success, requestSecs,
-	        		_gson.fromJson(result.get("body"), clazz), null);
-        	}
-        } else {
-        	synchronized (_gson) {
-        		return new APIResponse<T>(success, requestSecs,
-	        		null, _gson.fromJson(result.get("body"), APIError.class));
-        	}
+        synchronized (_gson) {
+            return new APIResponse<T>(success, requestSecs,
+                    success ? _gson.fromJson(result.get("body"), clazz) : null,
+                    success ? null : _gson.fromJson(result.get("body"), APIError.class));
         }
     }
     
+    /**
+     * Invokes a Team Cowboy REST method.
+     * 
+     * @param method the method to call
+     * @param httpVerb the HTTP verb to use in the request
+     * @param secure whether the request should be done over HTTPS
+     * @param params the list of parameters to the method
+     * @return the body of the HTTP response
+     */
     private String invoke(String method, HttpVerb httpVerb, boolean secure, TreeMap<String, String> params) throws IOException {
         String paramString = makeHttpParamString(httpVerb, method, params);
         
         switch (httpVerb) {
         case GET:
-        	return _httpProvider.makeHTTPCall((secure ? "https://" : "http://") + ENDPOINT + "?" + paramString, "", httpVerb.toString());
+            return _httpProvider.makeHTTPCall((secure ? "https://" : "http://") + ENDPOINT + "?" + paramString, "", httpVerb.toString());
         case POST:
             return _httpProvider.makeHTTPCall((secure ? "https://" : "http://") + ENDPOINT, paramString, httpVerb.toString());
         default:
-        	return null;
+            return null;
         }
     }
 
     /**
-     * Returns the parameter string for a given method call and set of parameters. 
+     * Returns the parameter string for a given method call and set of parameters.
+     *  
      * @param httpVerb the HTTP verb to use
      * @param method
      * @param params
      */
     private String makeHttpParamString(HttpVerb httpVerb, String method, TreeMap<String, String> params) {
-    	StringBuffer buffer = new StringBuffer();
-    	String timestamp = (System.currentTimeMillis()/1000)+"";
-    	String nonce = timestamp + _random.nextInt(99);
-    	StringBuffer paramsBuffer = new StringBuffer();
-    	
-    	//If you're interested in debugging the nonce:
-    	//System.out.println("Method: " + method + ", Nonce: " + nonce);
+        StringBuffer buffer = new StringBuffer();
+        String timestamp = (System.currentTimeMillis()/1000)+"";
+        String nonce = timestamp + _random.nextInt(99);
+        StringBuffer paramsBuffer = new StringBuffer();
+        
+        //If you're interested in debugging the nonce:
+        //System.out.println("Method: " + method + ", Nonce: " + nonce);
 
-    	params.put("api_key", _publicApiKey);
-    	params.put("method", method);
-    	params.put("timestamp", timestamp);
-    	params.put("nonce", nonce);
-		params.put("response_type", "json");
+        params.put("api_key", _publicApiKey);
+        params.put("method", method);
+        params.put("timestamp", timestamp);
+        params.put("nonce", nonce);
+        params.put("response_type", "json");
 
-		appendParams(paramsBuffer, params, true, false);
+        appendParams(paramsBuffer, params, true, false);
         buffer.append(paramsBuffer.toString());
         
         String sigInput = _privateApiKey + "|" + httpVerb.toString() + "|" + method + "|" + timestamp + "|" + nonce + "|" + paramsBuffer.toString().toLowerCase(); 
@@ -513,6 +534,7 @@ public class RESTClient {
 
     /**
      * Appends a sorted map of name/value pairs in HTTP parameter format to a string buffer.
+     * 
      * @param buffer the StringBuffer to append to
      * @param params the map of name value pairs to append
      * @param urlEncoded whether to URL encode the value or not
@@ -530,22 +552,23 @@ public class RESTClient {
     }
 
     /**
-     * Appends a parameter in HTTP parameter format to string buffer.  
+     * Appends a parameter in HTTP parameter format to string buffer.
+     * 
      * @param buffer the StringBuffer to append to
      * @param name the name of the parameter
      * @param value the value for the parameter
      * @param urlEncode whether to URL encode the value or not
      * @param ampersandPrefix whether to prepend an ampersand before the name/value pair
      */
-	private void appendParam(StringBuffer buffer, String name, String value, boolean urlEncode, boolean ampersandPrefix) {
+    private void appendParam(StringBuffer buffer, String name, String value, boolean urlEncode, boolean ampersandPrefix) {
         if (ampersandPrefix) buffer.append("&");
         if (urlEncode) {
-        	try {
-        		value = URLEncoder.encode(value, "UTF-8").replace("+", "%20");
-        	} catch (UnsupportedEncodingException uee) {
-        		//Should never happen as UTF-8 should always be supported.
-        		throw new RuntimeException(uee);
-        	}
+            try {
+                value = URLEncoder.encode(value, "UTF-8").replace("+", "%20");
+            } catch (UnsupportedEncodingException uee) {
+                //Should never happen as UTF-8 should always be supported.
+                throw new RuntimeException(uee);
+            }
         }
         buffer.append(name).append("=").append(value);
     }
