@@ -2,6 +2,7 @@ package com.downforce.teamcowboy.rest.response;
 
 public class RSVPDetails {
 	public boolean allowRSVP;
+	public boolean allowRsvpRemoval;
 	public boolean allowExtraPlayers;
 	public String[] allowedStatuses;
 	public String status;

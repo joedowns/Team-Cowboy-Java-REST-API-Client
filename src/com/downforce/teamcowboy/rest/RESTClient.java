@@ -77,7 +77,6 @@ public class RESTClient {
      * 
      * @param username the username of the user you are getting a token for.
      * @param password the password of the user you are getting a token for.
-     * @throws IOException
      * @see APIResponse
      */
     public APIResponse<UserInfo> Auth_GetUserToken(String username, String password) throws IOException {
@@ -95,7 +94,6 @@ public class RESTClient {
      * @param teamId id of the team that the event is associated with.
      * @param eventId id of the event to retrieve.
      * @param includeRSVPInfo whether or not to include RSVP information for the user (if null, server default value is used).
-     * @throws IOException
      */
     public APIResponse<Event> Event_Get(String userToken, int teamId, int eventId, boolean includeRSVPInfo) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -113,7 +111,6 @@ public class RESTClient {
      * @param userToken API account/user token. See {@link RESTClient#Auth_GetUserToken(String, String)}.
      * @param teamId id of the team that the event is associated with.
      * @param eventId id of the event for the attendance list to retrieve.
-     * @throws IOException
      */
     public APIResponse<AttendanceList> Event_GetAttendanceList(String userToken, int teamId, int eventId) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -134,12 +131,11 @@ public class RESTClient {
      * @param userToken API account/user token. See {@link RESTClient#Auth_GetUserToken(String, String)}.
      * @param teamId id of the team that the event is associated with.
      * @param eventId id of the event to save the RSVP for.
-     * @param status the RSVP status to save for the user.  Valid values:  yes, maybe, available, no
+     * @param status the RSVP status to save for the user. NOTE: To remove a RSVP, pass "noresponse" to remove the RSVP (if RSVP removal is allowed for the event). To determine if RSVP removal is allowed for a given event, refer to Event.rsvpInstances[].rsvpDetails.allowRsvpRemoval. Valid values:  yes, maybe, available, no, noresponse.
      * @param addlMale optional. The number of additional male players to include as "yes" in the RSVP.
      * @param addlFemale optional. The number of additional female players to include as "yes" in the RSVP.
      * @param comments optional. RSVP comments. If not provided, any existing RSVP comments will be cleared out for the user's RSVP.
      * @param rsvpAsUserId optional. The user to RSVP for. This is used to allow a user to RSVP as a user that is in their list of linked users. If not provided, the RSVP will be saved for the user associated with the userToken parameter value.
-     * @throws IOException
      */
     public APIResponse<SaveRSVPResponse> Event_SaveRSVP(String userToken, int teamId, int eventId, String status, Integer addlMale, Integer addlFemale, String comments, Integer rsvpAsUserId) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -161,7 +157,6 @@ public class RESTClient {
      * @param teamId id of the team associated with the message.
      * @param messageId id of the message to retrieve.
      * @param loadComments optional. Whether or not to load comments for the message. Default value: false
-     * @throws IOException
      */
     public APIResponse<Message> Message_Get(String userToken, int teamId, int messageId, Boolean loadComments) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -179,7 +174,6 @@ public class RESTClient {
      * @param userToken API account/user token. See {@link RESTClient#Auth_GetUserToken(String, String)}.
      * @param teamId id of the team associated with the message.
      * @param messageId id of the message to delete.
-     * @throws IOException
      */
     public APIResponse<Boolean> Message_Delete(String userToken, int teamId, int messageId) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -201,7 +195,6 @@ public class RESTClient {
      * @param sendNotifications optional. Whether or not to send notifications when the message and any message comments are posted. Default value: false.
      * @param isHidden optional. Whether or not the message is hidden in the team's list of messages. Can only be true for team admins. Default value: false.
      * @param allowComments optional. Whether or not comments can be posted for the message. Default value: true.
-     * @throws IOException
      */
     public APIResponse<Message> Message_Save(String userToken, int teamId, Integer messageId, String title, String body, Boolean isPinned, Boolean sendNotifications, Boolean isHidden, Boolean allowComments) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -225,7 +218,6 @@ public class RESTClient {
      * @param teamId id of the team associated with the message.
      * @param messageId id of the message that the comment is associated with.
      * @param commentId id of the comment to delete.
-     * @throws IOException
      */
     public APIResponse<Boolean> MessageComment_Delete(String userToken, int teamId, int messageId, int commentId) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -243,7 +235,6 @@ public class RESTClient {
      * @param teamId id of the team associated with the message.
      * @param messageId id of the message that the comment is associated with.
      * @param comment the text of the comment being added.
-     * @throws IOException
      */
     public APIResponse<Boolean> MessageComment_Add(String userToken, int teamId, int messageId, String comment) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -260,7 +251,6 @@ public class RESTClient {
      * 
      * @param userToken API account/user token. See {@link RESTClient#Auth_GetUserToken(String, String)}.
      * @param teamId id of the team to retrieve.
-     * @throws IOException
      */
     public APIResponse<Team> Team_Get(String userToken, int teamId) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -277,18 +267,19 @@ public class RESTClient {
      * @param userToken API account/user token. See {@link RESTClient#Auth_GetUserToken(String, String)}.
      * @param teamId id of the team to retrieve events for.
      * @param seasonId optional. id of the season to retrieve events for. If not provided, events for all of the team's seasons will be returned.
+     * @param includeRSVPInfo optional. Whether or not to include RSVP information for the user. NOTE: Please use this parameter sparingly! Passing a value of 'true' here requires additional work on the Team Cowboy server to retrieve RSVP information for the user. RSVP information should only be retrieved for events if your application will actually be using it! Default value: false
      * @param filter optional. an enumeration value indicating a special filter for retrieving events. Valid values: past, future, specificDates, nextEvent, previousEvent. Default value: future.
      * @param startDateTime required if filter=specificDates. If provided, events will only be retrieved that have a start date on or after this value. The value provided is evaluated against the local date for the event. Enter date/time in format: YYYY-MM-DD HH:MM:SS
      * @param endDateTime required if filter=specificDates. If provided, events will only be retrieved that have a end date on or before this value. The value provided is evaluated against the local date for the event. Enter date/time in format: YYYY-MM-DD HH:MM:SS
      * @param offset optional. The number of events to shift from those returned. This is typically used if you are requesting a specific number of events per page and you need to offset to a different page. This value is zero-based (i.e., for no offset, use 0, not 1). Default value: 0
      * @param qty optional. The number of events to retrieve. Again, if using pagination in your application, this would typically be the page size, or you just want to reduce the response size (i.e., less events). Default value: 10
-     * @throws IOException
      */
-    public APIResponse<Event[]> Team_GetEvents(String userToken, int teamId, Integer seasonId, String filter, Date startDateTime, Date endDateTime, Integer offset, Integer qty) throws IOException {
+    public APIResponse<Event[]> Team_GetEvents(String userToken, int teamId, Integer seasonId, Boolean includeRSVPInfo, String filter, Date startDateTime, Date endDateTime, Integer offset, Integer qty) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
         params.put("userToken", userToken);
         params.put("teamId", teamId+"");
         if (seasonId != null) params.put("seasonId", seasonId.toString());
+        if (includeRSVPInfo != null) params.put("includeRSVPInfo", includeRSVPInfo.toString());
         if (filter != null) params.put("filter", filter);
         if (startDateTime != null) params.put("startDateTime", _dateFormatter.format(startDateTime));
         if (endDateTime != null) params.put("endDateTime", _dateFormatter.format(endDateTime));
@@ -306,9 +297,9 @@ public class RESTClient {
      * @param qty optional. The number of messages to retrieve. Again, if using pagination in your application, this would typically be the page size. Default value: 10
      * @param sortBy optional. An enumeration value indicating how to sort the messages that are returned. Valid values: title, lastUpdated, type. Default value: lastUpdated
      * @param sortDirection optional. The sort direction for the messages returned. Valid values:  ASC, DESC. Default value: The default value varies based on the sortBy parameter.
-     * @throws IOException
+     * @param messageId optional. Used to retrieve a specific message. If not provided, all messages are retrieved.
      */
-    public APIResponse<Message[]> Team_GetMessages(String userToken, int teamId, Integer offset, Integer qty, String sortBy, String sortDirection) throws IOException {
+    public APIResponse<Message[]> Team_GetMessages(String userToken, int teamId, Integer offset, Integer qty, String sortBy, String sortDirection, Integer messageId) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
         params.put("userToken", userToken);
         params.put("teamId", teamId+"");
@@ -316,6 +307,7 @@ public class RESTClient {
         if (qty != null) params.put("qty", qty.toString());
         if (sortBy != null) params.put("sortBy", sortBy);
         if (sortDirection != null) params.put("sortDirection", sortDirection);
+        if (messageId != null) params.put("messageId", messageId.toString());
         return call("Team_GetMessages", HttpVerb.GET, false, params, Message[].class);
     }
 
@@ -328,7 +320,6 @@ public class RESTClient {
      * @param includeInactive optional. Whether or not to include team members that are marked as "inactive" for a team (inactive team members cannot access the team but are visible from the Roster page for team admins). Default value: true
      * @param sortBy optional. Order to sort the team members returned. The valid values for this parameter vary depending on whether or not the user making the method call is an admin on the team. Valid values (case-sensitive): If user is a team admin:  playerType, playerType_sex, sex, sex_playerType, email, email2, firstName, lastName, phone, tshirtSize, tshirtNumber, pantsSize, lastLogin, active, inviteStatus. If user is not a team admin: firstName, playerType, sex. Default value: firstName
      * @param sortDirection Optional. The sort direction for the team members returned. Valid values: ASC, DESC. Default value: ASC
-     * @throws IOException
      */
     public APIResponse<User> Team_GetRoster(String userToken, int teamId, Integer userId, Boolean includeInactive, String sortBy, String sortDirection) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -347,7 +338,6 @@ public class RESTClient {
      * 
      * @param userToken API account/user token. See {@link RESTClient#Auth_GetUserToken(String, String)}.
      * @param teamId id of the team to retrieve seasons for.
-     * @throws IOException
      */
     public APIResponse<Season[]> Team_GetSeasons(String userToken, int teamId) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -374,7 +364,6 @@ public class RESTClient {
      * Retrieves user details.
      * 
      * @param userToken API account/user token for the user to retrieve information for.
-     * @throws IOException
      */
     public APIResponse<User> User_Get(String userToken) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
@@ -389,12 +378,15 @@ public class RESTClient {
      * 
      * @param userToken API account/user token. See {@link RESTClient#Auth_GetUserToken(String, String)}.
      * @param teamId optional. A teamId to restrict the event returned to a specific team. If not provided, events for all of the user's teams will be considered.
-     * @throws IOException
+     * @param dashboardTeamsOnly optional. Whether or not to only consider the user's Dashboard teams when retrieving the user's next event. Default value: false
+     * @param includeRSVPInfo optional. Whether or not to include RSVP information for the user. NOTE: Please use this parameter sparingly! Passing a value of 'true' here requires additional work on the Team Cowboy server to retrieve RSVP information for the user. RSVP information should only be retrieved for events if your application will actually be using it! Default value: false
      */
-    public APIResponse<Event> User_GetNextTeamEvent(String userToken, Integer teamId) throws IOException {
+    public APIResponse<Event> User_GetNextTeamEvent(String userToken, Integer teamId, Boolean dashboardTeamsOnly, Boolean includeRSVPInfo) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
         params.put("userToken", userToken);
         if (teamId != null) params.put("teamId", teamId.toString());
+        if (dashboardTeamsOnly != null) params.put("dashboardTeamsOnly", dashboardTeamsOnly.toString());
+        if (includeRSVPInfo != null) params.put("includeRSVPInfo", includeRSVPInfo.toString());
         return call("User_GetNextTeamEvent", HttpVerb.GET, false, params, Event.class);
     }
 
@@ -406,14 +398,17 @@ public class RESTClient {
      * @param startDateTime optional. If provided, events will only be retrieved that have a start date/time on or after this value. The value provided is evaluated against the local date/time for the event. If not provided, the current date/time is used. Enter date/time in format: YYYY-MM-DD HH:MM:SS
      * @param endDateTime optional. If provided, events will only be retrieved that have a start date/time on or before this value. The value provided is evaluated against the local date/time for the event. If not provided, the current date/time + 60 days is used. Enter date/time in format: YYYY-MM-DD HH:MM:SS
      * @param teamId optional. A teamId to restrict the events returned to a specific team. If not provided, events for all of the user's teams are returned.
-     * @throws IOException
+     * @param dashboardTeamsOnly optional. Whether or not to restrict the events retrieved only to those for teams on the user's Dashboard. Default value: false
+     * @param includeRSVPInfo optional. Whether or not to include RSVP information for the user. NOTE: Please use this parameter sparingly! Passing a value of 'true' here requires additional work on the Team Cowboy server to retrieve RSVP information for the user. RSVP information should only be retrieved for events if your application will actually be using it! Default value: false
      */
-    public APIResponse<Event[]> User_GetTeamEvents(String userToken, Date startDateTime, Date endDateTime, Integer teamId) throws IOException {
+    public APIResponse<Event[]> User_GetTeamEvents(String userToken, Date startDateTime, Date endDateTime, Integer teamId, Boolean dashboardTeamsOnly, Boolean includeRSVPInfo) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
         params.put("userToken", userToken);
         if (startDateTime != null) params.put("startDateTime", _dateFormatter.format(startDateTime));
         if (endDateTime != null) params.put("endDateTime", _dateFormatter.format(endDateTime));
         if (teamId != null) params.put("teamId", teamId.toString());
+        if (dashboardTeamsOnly != null) params.put("dashboardTeamsOnly", dashboardTeamsOnly.toString());
+        if (includeRSVPInfo != null) params.put("includeRSVPInfo", includeRSVPInfo.toString());
         return call("User_GetTeamEvents", HttpVerb.GET, false, params, Event[].class);
     }
     
@@ -427,9 +422,9 @@ public class RESTClient {
      * @param qty optional. The number of messages to retrieve. Again, if using pagination in your application, this would typically be the page size. Default value: 10
      * @param sortBy optional. An enumeration value indicating how to sort the messages that are returned. Valid values: title, lastUpdated, type. Default value: lastUpdated
      * @param sortDirection optional. The sort direction for the messages returned. Valid values:  ASC, DESC. Default value: The default value varies based on the sortBy parameter.
-     * @throws IOException
+     * @param messageId optional. Used to retrieve a specific message. If not provided, all messages are retrieved.
      */
-    public APIResponse<Message[]> User_GetTeamMessages(String userToken, Integer teamId, Integer offset, Integer qty, String sortBy, String sortDirection) throws IOException {
+    public APIResponse<Message[]> User_GetTeamMessages(String userToken, Integer teamId, Integer offset, Integer qty, String sortBy, String sortDirection, Integer messageId) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
         params.put("userToken", userToken);
         if (teamId != null) params.put("teamId", teamId.toString());
@@ -437,6 +432,7 @@ public class RESTClient {
         if (qty != null) params.put("qty", qty.toString());
         if (sortBy != null) params.put("sortBy", sortBy);
         if (sortDirection != null) params.put("sortDirection", sortDirection);
+        if (messageId != null) params.put("messageId", messageId.toString());
         return call("User_GetTeamMessages", HttpVerb.GET, false, params, Message[].class);
     }
 
@@ -444,11 +440,12 @@ public class RESTClient {
      * Retrieves an array of teams that the user is an active member of.
      * 
      * @param userToken API account/user token. See {@link RESTClient#Auth_GetUserToken(String, String)}.
-     * @throws IOException
+     * @param dashboardTeamsOnly optional. Whether or not to restrict the teams retrieved only to those on the user's Dashboard. Default value: false
      */
-    public APIResponse<Team[]> User_GetTeams(String userToken) throws IOException {
+    public APIResponse<Team[]> User_GetTeams(String userToken, Boolean dashboardTeamsOnly) throws IOException {
         TreeMap<String, String> params = new TreeMap<String, String>();
         params.put("userToken", userToken);
+        if (dashboardTeamsOnly != null) params.put("dashboardTeamsOnly", dashboardTeamsOnly.toString());
         return call("User_GetTeams", HttpVerb.GET, false, params, Team[].class);
     }
 
