@@ -24,6 +24,9 @@ public class User {
 	public String dateCreatedUtc;
 	public String dateLastUpdatedUtc;
 	public String dateLastSignInUtc;
+	public Integer birthDate_month;
+	public Integer birthDate_day;
+	public Integer birthDate_year;
 
 	User() {}
 }

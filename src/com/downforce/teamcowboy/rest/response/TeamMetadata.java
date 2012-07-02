@@ -1,7 +1,5 @@
 package com.downforce.teamcowboy.rest.response;
 
-//import java.util.Map;
-
 public class TeamMetadata {
 	public TeamMemberType teamMemberType;
 	public String notes;
