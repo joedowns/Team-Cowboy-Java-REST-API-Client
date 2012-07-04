@@ -5,12 +5,13 @@ public class RSVPDetails {
 	public boolean allowRsvpRemoval;
 	public boolean allowExtraPlayers;
 	public String[] allowedStatuses;
+	public RSVPStatus[] allowedStatusesDisplay;
 	public String status;
 	public String statusDisplay;
 	public String statusDisplayShort;
 	public int addlMale;
 	public String addlMaleDislpay;
 	public int addlFemale;
-	public String addlFEmaleDislpay;
+	public String addlFemaleDislpay;
 	public String comments;
 }
